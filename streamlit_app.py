@@ -5,6 +5,7 @@ from mcp_agent.app import MCPApp
 from mcp_agent.agents.agent import Agent
 from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
+app = MCPApp(name="mcp_basic_agent")
 
 def format_list_tools_result(list_tools_result: ListToolsResult):
     res = ""
@@ -34,6 +35,4 @@ async def main():
         st.markdown(tools_str)
 
 if __name__ == "__main__":
-    app = MCPApp(name="mcp_basic_agent")
-
     asyncio.run(main())
