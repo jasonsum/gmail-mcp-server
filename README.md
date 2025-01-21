@@ -80,7 +80,7 @@ For example, you may use a dot directory in your home folder, replacing `[your-h
 
 Using [uv](https://docs.astral.sh/uv/) is recommended.
 
-To integrate this server with Claude Desktop as the MCP Client, add the following to your app's server configuration. By default, this is stored as `~/Library/Application\ Support/Claude\claude_desktop_config.json`. 
+To integrate this server with Claude Desktop as the MCP Client, add the following to your app's server configuration. By default, this is stored as `~/Library/Application\ Support/Claude/claude_desktop_config.json`. 
 
 ```json
 {
