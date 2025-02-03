@@ -9,6 +9,7 @@ from email.header import decode_header
 from base64 import urlsafe_b64decode
 from email import message_from_bytes
 import webbrowser
+from dotenv import load_dotenv
 
 from mcp.server.models import InitializationOptions
 import mcp.types as types
@@ -117,6 +118,8 @@ class GmailService:
         logger.info("Gmail service initialized")
         self.user_email = self._get_user_email()
         logger.info(f"User email retrieved: {self.user_email}")
+        self.unread_emails_category = self._get_unread_emails_category()
+        logger.info(f"Unread emails category: {self.unread_emails_category}")
 
     def _get_token(self) -> Credentials:
         """Get or refresh Google API token"""
@@ -157,6 +160,19 @@ class GmailService:
         user_email = profile.get('emailAddress', '')
         return user_email
     
+    @staticmethod
+    def load_env() -> None:
+        """Load environment variables from .env file."""
+        load_dotenv()
+
+    def _get_unread_emails_category(self) -> str:
+        """Get user's unread emails category"""
+        self.load_env()
+        unread_emails_category = os.environ.get('UNREAD_EMAILS_CATEGORY', 'primary')
+        if len(unread_emails_category) == 0:
+            unread_emails_category = None
+        return unread_emails_category
+
     async def send_email(self, recipient_id: str, subject: str, message: str,) -> dict:
         """Creates and sends an email message"""
         try:
@@ -187,13 +203,19 @@ class GmailService:
         except HttpError as error:
             return f"An HttpError occurred: {str(error)}"
 
-    async def get_unread_emails(self) -> list[dict[str, str]]| str:
+    async def get_unread_emails(self, category: str) -> list[dict[str, str]]| str:
         """
         Retrieves unread messages from mailbox.
         Returns list of messsage IDs in key 'id'."""
         try:
             user_id = 'me'
-            query = 'in:inbox is:unread category:primary'
+            query = 'in:inbox is:unread'
+            logger.info(f"Retrieving unread emails with category: {category} and self.unread_emails_category: {self.unread_emails_category}")
+            if category:
+                query += f' category:{category}'
+            else:
+                if self.unread_emails_category:
+                    query += f' category:{self.unread_emails_category}'
 
             response = self.service.users().messages().list(userId=user_id,
                                                         q=query).execute()
@@ -392,7 +414,12 @@ async def main(creds_file_path: str,
                 description="Retrieve unread emails",
                 inputSchema={
                     "type": "object",
-                    "properties": {},
+                    "properties": {
+                        "category": {
+                            "type": "string",
+                            "description": "Email category",
+                        }
+                    },
                     "required": []
                 },
             ),
@@ -473,8 +500,8 @@ async def main(creds_file_path: str,
             return [types.TextContent(type="text", text=response_text)]
 
         if name == "get-unread-emails":
-                
-            unread_emails = await gmail_service.get_unread_emails()
+            category = arguments.get("category", None)
+            unread_emails = await gmail_service.get_unread_emails(category)
             return [types.TextContent(type="text", text=str(unread_emails),artifact={"type": "json", "data": unread_emails} )]
         
         if name == "read-email":

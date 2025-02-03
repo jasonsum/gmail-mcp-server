@@ -33,6 +33,8 @@ https://github.com/user-attachments/assets/5794cd16-00d2-45a2-884a-8ba0c3a90c90
 
 - **get-unread-emails**
   - Retrieves unread emails 
+  - Input:
+    - `category` (optional string): Category of the unread emails. 
   - Returns list of emails including email ID
 
 - **read-email**
